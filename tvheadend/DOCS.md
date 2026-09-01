@@ -8,9 +8,10 @@ TVHeadend offers the HTTP (VLC, MPlayer), HTSP (Kodi, Movian) and SAT>IP streami
 Multiple EPG sources are supported such as
 over-the-air DVB and ATSC including OpenTV DVB extensions, XMLTV, PyXML.
 
-Have included the following along with TVHeadend:
--Webgrab+
--Streamlink
+Included along with TVHeadend:
+
+- Streamlink (preinstalled)
+- WebGrab+Plus (optional, enable it with the `webgrabplus` option)
 
 ## Installation
 
@@ -46,9 +47,14 @@ init_commands:
 Installs the [WebGrab+Plus][webgrabplus] EPG grabber on the first start of the
 add-on and schedules a nightly guide update. Disabled by default.
 
-The grabber is downloaded from an external site at runtime. If that download
-fails, the add-on logs a warning, starts TVHeadend anyway, and retries the
-installation on the next start.
+The grabber is downloaded from webgrabplus.com at runtime and stored in
+`/config/tvheadend/wg++/`, so it survives add-on updates. It runs on the Mono
+runtime, which is reinstalled on every start because the container filesystem
+is rebuilt on each add-on update.
+
+If any of that fails, the add-on logs a warning, starts TVHeadend anyway, and
+retries on the next start - a broken grabber never prevents the add-on from
+running.
 
 ### Option: `system_packages`
 

@@ -9,9 +9,6 @@ init: false
 arch:
   - aarch64
   - amd64
-  - armhf
-  - armv7
-  - i386
 webui: "http://[HOST]:[PORT:9981]/"
 devices:
   - /dev/dvb
