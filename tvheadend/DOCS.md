@@ -32,6 +32,7 @@ comparison to installing any other Home Assistant add-on.
 Example add-on configuration:
 
 ```yaml
+webgrabplus: false
 system_packages:
   - ffmpeg
 init_commands:
@@ -39,6 +40,15 @@ init_commands:
 ```
 
 **Note**: _This is just an example, don't copy and paste it! Create your own!_
+
+### Option: `webgrabplus`
+
+Installs the [WebGrab+Plus][webgrabplus] EPG grabber on the first start of the
+add-on and schedules a nightly guide update. Disabled by default.
+
+The grabber is downloaded from an external site at runtime. If that download
+fails, the add-on logs a warning, starts TVHeadend anyway, and retries the
+installation on the next start.
 
 ### Option: `system_packages`
 
@@ -114,6 +124,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
+[webgrabplus]: https://www.webgrabplus.com/
 [alpine-packages]: https://pkgs.alpinelinux.org/packages
 [forum]: https://community.home-assistant.io/
 [frenck]: https://github.com/frenck

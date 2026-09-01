@@ -25,9 +25,11 @@ ports_description:
 map:
   - "config:rw"
 options:
+  webgrabplus: false
   system_packages: []
   init_commands: []
 schema:
+  webgrabplus: bool
   system_packages:
     - str
   init_commands:

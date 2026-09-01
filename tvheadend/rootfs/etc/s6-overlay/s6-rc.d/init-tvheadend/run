@@ -1,61 +1,95 @@
-#!/usr/bin/with-contenv bashio
+#!/command/with-contenv bashio
 # shellcheck shell=bash
 # ==============================================================================
 # Home Assistant Community Add-on: TVHeadend
-# Executes user customizations on startup
+# Prepares the TVHeadend configuration and the optional WebGrab+Plus grabber
 # ==============================================================================
+declare -r CONFIG_DIR="/config/tvheadend"
+declare -r WG_DIR="${CONFIG_DIR}/wg++"
+declare -r WG_URL="http://webgrabplus.com/sites/default/files/download/SW/V3.3.0/WebGrabPlus_V3.3_install.tar.gz"
+declare -r WG_SITEINI_URL="http://webgrabplus.com/sites/default/files/download/ini/SiteIniPack_current.zip"
+declare -r WG_GRABBER_URL="http://www.webgrabplus.com/sites/default/files/tv_grab_wg.txt"
 
-check_webgrabplus(){
-    if [ -z "$(ls -A /config/tvheadend/wg++)" ]; then return 1; else return 0; fi
+# WebGrab+Plus is considered installed when its runner script is present.
+webgrabplus_is_installed() {
+    [[ -x "${WG_DIR}/run.sh" ]]
 }
 
-webgrabplus_install(){
-    if apk update; then
-        bashio::log.info '[Webgrab+] APK: Installing required packages.'
-        if apk add --no-cache --virtual .build-deps git mono --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing; then
-            bashio::log.info '[Webgrab+] Installing Webgrab+.'
-            cd /tmp \
-            && wget http://webgrabplus.com/sites/default/files/download/SW/V3.3.0/WebGrabPlus_V3.3_install.tar.gz  \
-            && tar -zxvf WebGrabPlus_V3.3_install.tar.gz \
-            && rm WebGrabPlus_V3.3_install.tar.gz  \
-            && mv .wg++/ /config/tvheadend/wg++  \
-            && cd /config/tvheadend/wg++  \
-            && ./install.sh \
-            && rm -rf siteini.pack/  \
-            && wget http://webgrabplus.com/sites/default/files/download/ini/SiteIniPack_current.zip \
-            && unzip SiteIniPack_current.zip \
-            && rm SiteIniPack_current.zip \
-            && cp siteini.pack/India/* siteini.user/ \
-            && wget -O /usr/bin/tv_grab_wg++ http://www.webgrabplus.com/sites/default/files/tv_grab_wg.txt \
-            && sed -i 's|~/.wg++/guide.xml|/config/tvheadend/wg++/guide.xml|g' /usr/bin/tv_grab_wg++ \
-            && chmod a+x /usr/bin/tv_grab_wg++
-        else
-            bashio::log.info '[Webgrab+] APK: Critical error. Unable install required packages.'
-            exit 1
-        fi
-        bashio::log.info '[Webgrab+] APK: Removing packages no longer required.'
-        apk del --no-cache --purge .build-deps
-    else
-        bashio::log.error '[Webgrab+] APK: Critical error. Unable to update pkg list. Check connectivity.'
-        exit 1
-    fi
-    bashio::log.info '[Webgrab+] Finsihed all APK and PIP3 updates and installs.'
+# Installs WebGrab+Plus. Returns non-zero on any failure; the caller decides
+# what to do with that - a failed grabber install must never take the add-on
+# down, TVHeadend itself works fine without it.
+webgrabplus_install() {
+    bashio::log.info '[WebGrab+] Installing build dependencies...'
+    apk update || return 1
+    apk add --no-cache --virtual .wg-deps git mono \
+        --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing \
+        || return 1
+
+    bashio::log.info '[WebGrab+] Downloading WebGrab+Plus...'
+    rm -rf /tmp/.wg++ /tmp/wgpp.tar.gz
+    curl -fsSL -o /tmp/wgpp.tar.gz "${WG_URL}" \
+        && tar -xzf /tmp/wgpp.tar.gz -C /tmp \
+        && rm -f /tmp/wgpp.tar.gz \
+        && mkdir -p "${WG_DIR}" \
+        && cp -a /tmp/.wg++/. "${WG_DIR}/" \
+        && rm -rf /tmp/.wg++ \
+        || return 1
+
+    bashio::log.info '[WebGrab+] Running the WebGrab+Plus installer...'
+    (
+        cd "${WG_DIR}" || exit 1
+        ./install.sh || exit 1
+        rm -rf siteini.pack/
+        curl -fsSL -o SiteIniPack_current.zip "${WG_SITEINI_URL}" || exit 1
+        unzip -q -o SiteIniPack_current.zip || exit 1
+        rm -f SiteIniPack_current.zip
+        mkdir -p siteini.user
+        [[ -d siteini.pack/India ]] && cp -f siteini.pack/India/* siteini.user/
+        exit 0
+    ) || return 1
+
+    bashio::log.info '[WebGrab+] Installing the tv_grab_wg++ grabber...'
+    curl -fsSL -o /usr/bin/tv_grab_wg++ "${WG_GRABBER_URL}" \
+        && sed -i "s|~/.wg++/guide.xml|${WG_DIR}/guide.xml|g" /usr/bin/tv_grab_wg++ \
+        && chmod a+x /usr/bin/tv_grab_wg++ \
+        || return 1
+
+    return 0
 }
 
-# Ensure directory exists
-if ! bashio::fs.directory_exists '/config/tvheadend/'; then
-    bashio::log.info "Creating default configuration directory at /config/tvheadend/"
-    mkdir -p /config/tvheadend/recordings
-    timeout 20s /usr/bin/tvheadend --firstrun -u root -g root -c /config/tvheadend
+# Ensure the configuration directory exists and is initialized
+if ! bashio::fs.directory_exists "${CONFIG_DIR}"; then
+    bashio::log.info "Creating default configuration directory at ${CONFIG_DIR}"
+    mkdir -p "${CONFIG_DIR}/recordings" \
+        || bashio::exit.nok "Failed creating ${CONFIG_DIR}"
+    timeout 20s /usr/bin/tvheadend --firstrun -u root -g root -c "${CONFIG_DIR}" \
+        || bashio::log.warning 'First run initialization did not complete cleanly'
 fi
 
-if check_webgrabplus; then
-    bashio::log.info "[Webgrab+] Webgrab+ already installed"
+# Install the EPG grabber on first boot, but never fail the add-on over it
+if webgrabplus_is_installed; then
+    bashio::log.info '[WebGrab+] Already installed'
+elif ! bashio::config.true 'webgrabplus'; then
+    bashio::log.info '[WebGrab+] Disabled in the add-on configuration, skipping'
 else
-    bashio::log.info "[Webgrab+] No webgrab+ installation found - Installing webgrab+"
-    webgrabplus_install
-    chmod +x /usr/bin/restart_addon
-    exec /usr/bin/restart_addon
+    bashio::log.info '[WebGrab+] Not installed yet, installing...'
+    if webgrabplus_install; then
+        bashio::log.info '[WebGrab+] Installation completed successfully'
+    else
+        bashio::log.warning \
+            '[WebGrab+] Installation failed, continuing without the grabber.' \
+            'Check the log above; the add-on will retry on the next start.'
+        rm -rf "${WG_DIR}"
+    fi
+    apk del --no-cache --purge .wg-deps &> /dev/null || true
 fi
 
-bashio::log.info '[Webgrab+] Setup completed without errors!!'
+# Schedule the nightly EPG grab only when the grabber is actually available
+if webgrabplus_is_installed; then
+    mkdir -p /etc/crontabs
+    echo "0 0 * * * ${WG_DIR}/run.sh" > /etc/crontabs/root
+else
+    rm -f /etc/crontabs/root
+fi
+
+bashio::log.info 'Initialization completed'
