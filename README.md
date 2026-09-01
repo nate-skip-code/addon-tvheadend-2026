@@ -6,9 +6,6 @@
 
 ![Supports aarch64 Architecture][aarch64-shield]
 ![Supports amd64 Architecture][amd64-shield]
-![Supports armhf Architecture][armhf-shield]
-![Supports armv7 Architecture][armv7-shield]
-![Supports i386 Architecture][i386-shield]
 
 [![Github Actions][github-actions-shield]][github-actions]
 ![Project Maintenance][maintenance-shield]
@@ -29,7 +26,8 @@ over-the-air DVB and ATSC including OpenTV DVB extensions, XMLTV, PyXML.
 
 ![TVHeadend](images/screenshot.png)
 
-This add-on comes with Webgrab+, Streamlink preinstalled as well.
+Streamlink comes preinstalled. The WebGrab+Plus EPG grabber can be enabled
+from the add-on configuration.
 
 [:books: Read the full add-on documentation][docs]
 
@@ -54,7 +52,8 @@ Thank you for being involved! :heart_eyes:
 
 ## Authors & contributors
 
-This repository is owned and maintained by [GauthamVarmaK][gautham].
+This repository is maintained by [nate-skip-code][maintainer]. It is a fork of
+the TVHeadend add-on originally created by [GauthamVarmaK][gautham].
 
 This has been possible thanks to the community add-ons initiative by [Frenck]
 
@@ -85,24 +84,22 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-[contributors]: https://github.com/GauthamVarmaK/addon-tvheadend/graphs/contributors
-[docs]: https://github.com/GauthamVarmaK/addon-tvheadend/blob/main/tvheadend/DOCS.md
+[contributors]: https://github.com/nate-skip-code/addon-tvheadend-2026/graphs/contributors
+[docs]: https://github.com/nate-skip-code/addon-tvheadend-2026/blob/main/tvheadend/DOCS.md
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg
 [forum]: https://community.home-assistant.io/
 [gautham]: https://github.com/GauthamVarmaK
+[maintainer]: https://github.com/nate-skip-code
 [frenck]: https://github.com/frenck
-[github-actions-shield]: https://github.com/GauthamVarmaK/addon-tvheadend/workflows/CI/badge.svg
-[github-actions]: https://github.com/GauthamVarmaK/addon-tvheadend/actions
-[i386-shield]: https://img.shields.io/badge/i386-yes-green.svg
-[issue]: https://github.com/GauthamVarmaK/addon-tvheadend/issues
-[license-shield]: https://img.shields.io/github/license/GauthamVarmaK/addon-tvheadend.svg
-[maintenance-shield]: https://img.shields.io/maintenance/yes/2023.svg
-[project-stage-shield]: https://img.shields.io/badge/project%20stage-production%20ready-brightgreen.svg
-[releases-shield]: https://img.shields.io/github/release/GauthamVarmaK/addon-tvheadend.svg
-[releases]: https://github.com/GauthamVarmaK/addon-tvheadend/releases
+[github-actions-shield]: https://github.com/nate-skip-code/addon-tvheadend-2026/workflows/CI/badge.svg
+[github-actions]: https://github.com/nate-skip-code/addon-tvheadend-2026/actions
+[issue]: https://github.com/nate-skip-code/addon-tvheadend-2026/issues
+[license-shield]: https://img.shields.io/github/license/nate-skip-code/addon-tvheadend-2026.svg
+[maintenance-shield]: https://img.shields.io/maintenance/yes/2026.svg
+[project-stage-shield]: https://img.shields.io/badge/project%20stage-experimental-yellow.svg
+[releases-shield]: https://img.shields.io/github/release/nate-skip-code/addon-tvheadend-2026.svg
+[releases]: https://github.com/nate-skip-code/addon-tvheadend-2026/releases
 [aarch64-shield]: https://img.shields.io/badge/aarch64-yes-green.svg
 [amd64-shield]: https://img.shields.io/badge/amd64-yes-green.svg
-[armhf-shield]: https://img.shields.io/badge/armhf-yes-green.svg
-[armv7-shield]: https://img.shields.io/badge/armv7-yes-green.svg
-[commits-shield]: https://img.shields.io/github/commit-activity/y/GauthamVarmaK/addon-tvheadend.svg
-[commits]: https://github.com/GauthamVarmaK/addon-tvheadend/commits/main
+[commits-shield]: https://img.shields.io/github/commit-activity/y/nate-skip-code/addon-tvheadend-2026.svg
+[commits]: https://github.com/nate-skip-code/addon-tvheadend-2026/commits/main

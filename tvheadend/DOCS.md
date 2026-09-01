@@ -8,16 +8,17 @@ TVHeadend offers the HTTP (VLC, MPlayer), HTSP (Kodi, Movian) and SAT>IP streami
 Multiple EPG sources are supported such as
 over-the-air DVB and ATSC including OpenTV DVB extensions, XMLTV, PyXML.
 
-Have included the following along with TVHeadend:
--Webgrab+
--Streamlink
+Included along with TVHeadend:
+
+- Streamlink (preinstalled)
+- WebGrab+Plus (optional, enable it with the `webgrabplus` option)
 
 ## Installation
 
 The installation of this add-on is pretty straightforward and not different in
 comparison to installing any other Home Assistant add-on.
 
-1. Add this repository to have addons by GauthamVarmaK:
+1. Add this repository to Home Assistant:
    [![Home Assistant with repository URL pre-filled][my-ha-shield]][my-ha-repo]
 1. Search for the "TVHeadend" add-on in the Supervisor add-on store and install it.
 1. Start the "TVHeadend" add-on.
@@ -32,6 +33,7 @@ comparison to installing any other Home Assistant add-on.
 Example add-on configuration:
 
 ```yaml
+webgrabplus: false
 system_packages:
   - ffmpeg
 init_commands:
@@ -39,6 +41,20 @@ init_commands:
 ```
 
 **Note**: _This is just an example, don't copy and paste it! Create your own!_
+
+### Option: `webgrabplus`
+
+Installs the [WebGrab+Plus][webgrabplus] EPG grabber on the first start of the
+add-on and schedules a nightly guide update. Disabled by default.
+
+The grabber is downloaded from webgrabplus.com at runtime and stored in
+`/config/tvheadend/wg++/`, so it survives add-on updates. It runs on the Mono
+runtime, which is reinstalled on every start because the container filesystem
+is rebuilt on each add-on update.
+
+If any of that fails, the add-on logs a warning, starts TVHeadend anyway, and
+retries on the next start - a broken grabber never prevents the add-on from
+running.
 
 ### Option: `system_packages`
 
@@ -61,6 +77,45 @@ every single time this add-on starts.
   `/dev/dvb/`, `/dev/dri/` inside the addon.
 
 Consider, backing `/config/tvheadend/` up whenever migrating.
+
+## TV tuners
+
+The add-on maps `/dev/dvb/` into the container, and on start it logs the
+adapters it can see:
+
+```txt
+Detected 1 DVB adapter(s):
+  /dev/dvb/adapter0 (1 frontend(s))
+```
+
+If it instead warns that there is no `/dev/dvb` or that no adapters were found,
+the problem is on the host, not in TVHeadend. **An add-on cannot load kernel
+modules or firmware for the host** - it can only use device nodes the host
+kernel has already created. Two things must be true on the host:
+
+1. The kernel driver for the tuner is present and loaded.
+2. Any firmware blob the tuner needs is in the host's `/lib/firmware/`.
+
+Check the host's kernel log (`dmesg`) for the tuner. A line such as
+`Direct firmware load for dvb-demod-si2168-b40-01.fw failed with error -2`
+means the driver bound but the firmware is missing.
+
+Note that Home Assistant OS does not ship DVB tuner drivers or firmware, and
+[declined to add them][haos-dvb]. Tuners generally work on Home Assistant
+Supervised installs, where the underlying distribution provides both.
+
+### Hauppauge Digital TV Tuner for Xbox One
+
+This tuner is an `em28xx` bridge with a Silicon Labs `si2168` (revision B40)
+demodulator and an `si2157` tuner. It needs the `em28xx`, `em28xx_dvb`,
+`si2168` and `si2157` modules, plus the `dvb-demod-si2168-b40-01.fw` firmware,
+which is **not** part of `linux-firmware` - it is distributed by
+[Hauppauge][hauppauge-linux] and has to be placed in the host's
+`/lib/firmware/` by hand.
+
+Once `dmesg` shows the frontend registering and `/dev/dvb/adapter0` exists on
+the host, restart the add-on and it will pick the tuner up.
+
 
 ## Changelog & Releases
 
@@ -86,7 +141,8 @@ You have several options to get them answered:
 
 ## Authors & contributors
 
-This repository is owned and maintained by [GauthamVarmaK][gautham].
+This repository is maintained by [nate-skip-code][maintainer]. It is a fork of
+the TVHeadend add-on originally created by [GauthamVarmaK][gautham].
 
 This has been possible thanks to the community add-ons initiative by [Frenck][frenck]
 
@@ -114,12 +170,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
+[haos-dvb]: https://github.com/home-assistant/operating-system/issues/3653
+[hauppauge-linux]: https://www.hauppauge.com/pages/support/support_linux.html
+[webgrabplus]: https://www.webgrabplus.com/
 [alpine-packages]: https://pkgs.alpinelinux.org/packages
 [forum]: https://community.home-assistant.io/
 [frenck]: https://github.com/frenck
 [gautham]: https://github.com/GauthamVarmaK
+[maintainer]: https://github.com/nate-skip-code
 [my-ha-shield]: https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg
-[issue]: https://github.com/GauthamVarmaK/addon-tvheadend/issues
+[issue]: https://github.com/nate-skip-code/addon-tvheadend-2026/issues
 [semver]: http://semver.org/spec/v2.0.0.htm
-[my-ha-repo]: https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FGauthamVarmaK%2Fhassio-addons
-[releases]: https://github.com/GauthamVarmaK/addon-tvheadend/releases
+[my-ha-repo]: https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fnate-skip-code%2Faddon-tvheadend-2026
+[releases]: https://github.com/nate-skip-code/addon-tvheadend-2026/releases
