@@ -89,6 +89,12 @@ jobs:
           from=$(yq --no-colors eval ".build_from.${{ matrix.architecture }}" "${{ needs.information.outputs.build }}")
           echo "from=${from}" >> "$GITHUB_OUTPUT"
 
+          # Container registry namespaces must be lowercase
+          owner="${{ github.repository_owner }}"
+          slug="${{ needs.information.outputs.slug }}"
+          arch="${{ matrix.architecture }}"
+          echo "image=ghcr.io/${owner,,}/${slug}/${arch}" >> "$GITHUB_OUTPUT"
+
           if [[ "${{ matrix.architecture}}" = "amd64" ]]; then
             echo "platform=linux/amd64" >> "$GITHUB_OUTPUT"
           elif [[ "${{ matrix.architecture }}" = "i386" ]]; then
@@ -117,14 +123,14 @@ jobs:
           load: true
           # yamllint disable rule:line-length
           tags: |
-            ghcr.io/gauthamvarmak/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.environment }}
-            ghcr.io/gauthamvarmak/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.version }}
+            ${{ steps.flags.outputs.image }}:${{ needs.information.outputs.environment }}
+            ${{ steps.flags.outputs.image }}:${{ needs.information.outputs.version }}
           # yamllint enable rule:line-length
           context: ${{ needs.information.outputs.target }}
           file: ${{ needs.information.outputs.target }}/Dockerfile
           cache-from: |
             type=local,src=/tmp/.docker-cache
-            ghcr.io/gauthamvarmak/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:edge
+            ${{ steps.flags.outputs.image }}:edge
           cache-to: type=local,mode=max,dest=/tmp/.docker-cache-new
           platforms: ${{ steps.flags.outputs.platform }}
           build-args: |
@@ -148,9 +154,9 @@ jobs:
         # yamllint disable rule:line-length
         run: |
           docker push \
-            "ghcr.io/gauthamvarmak/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.environment }}"
+            "${{ steps.flags.outputs.image }}:${{ needs.information.outputs.environment }}"
           docker push \
-            "ghcr.io/gauthamvarmak/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.version }}"
+            "${{ steps.flags.outputs.image }}:${{ needs.information.outputs.version }}"
 
   publish-stable:
     name: 📢 Publish to stable repository
