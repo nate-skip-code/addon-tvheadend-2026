@@ -56,6 +56,39 @@ webgrabplus_install() {
     return 0
 }
 
+# Reports the tuners visible inside the container. TVHeadend can only use
+# adapters the host kernel has already bound and exposed under /dev/dvb - the
+# add-on cannot load kernel modules or firmware on the host's behalf, so an
+# empty list here is always a host-side problem, not a TVHeadend one.
+report_dvb_adapters() {
+    local adapter
+    local -a adapters
+    local -a frontends
+
+    if [[ ! -d /dev/dvb ]]; then
+        bashio::log.warning \
+            'No /dev/dvb in this container - no DVB tuner was detected.' \
+            'The host needs the kernel driver and firmware for your tuner' \
+            'before TVHeadend can see it. See the add-on documentation.'
+        return 0
+    fi
+
+    mapfile -t adapters < <(find /dev/dvb -mindepth 1 -maxdepth 1 -name 'adapter*' | sort)
+    if bashio::var.equals "${#adapters[@]}" 0; then
+        bashio::log.warning \
+            '/dev/dvb exists but contains no adapters - no DVB tuner was' \
+            'detected. Check the host kernel log for driver or firmware' \
+            'errors. See the add-on documentation.'
+        return 0
+    fi
+
+    bashio::log.info "Detected ${#adapters[@]} DVB adapter(s):"
+    for adapter in "${adapters[@]}"; do
+        mapfile -t frontends < <(find "${adapter}" -name 'frontend*' | sort)
+        bashio::log.info "  ${adapter} (${#frontends[@]} frontend(s))"
+    done
+}
+
 # Ensure the configuration directory exists and is initialized
 if ! bashio::fs.directory_exists "${CONFIG_DIR}"; then
     bashio::log.info "Creating default configuration directory at ${CONFIG_DIR}"
@@ -89,5 +122,7 @@ if webgrabplus_is_installed && bashio::config.true 'webgrabplus'; then
 else
     rm -f /etc/crontabs/root
 fi
+
+report_dvb_adapters
 
 bashio::log.info 'Initialization completed'

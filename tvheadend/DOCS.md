@@ -78,6 +78,45 @@ every single time this add-on starts.
 
 Consider, backing `/config/tvheadend/` up whenever migrating.
 
+## TV tuners
+
+The add-on maps `/dev/dvb/` into the container, and on start it logs the
+adapters it can see:
+
+```txt
+Detected 1 DVB adapter(s):
+  /dev/dvb/adapter0 (1 frontend(s))
+```
+
+If it instead warns that there is no `/dev/dvb` or that no adapters were found,
+the problem is on the host, not in TVHeadend. **An add-on cannot load kernel
+modules or firmware for the host** - it can only use device nodes the host
+kernel has already created. Two things must be true on the host:
+
+1. The kernel driver for the tuner is present and loaded.
+2. Any firmware blob the tuner needs is in the host's `/lib/firmware/`.
+
+Check the host's kernel log (`dmesg`) for the tuner. A line such as
+`Direct firmware load for dvb-demod-si2168-b40-01.fw failed with error -2`
+means the driver bound but the firmware is missing.
+
+Note that Home Assistant OS does not ship DVB tuner drivers or firmware, and
+[declined to add them][haos-dvb]. Tuners generally work on Home Assistant
+Supervised installs, where the underlying distribution provides both.
+
+### Hauppauge Digital TV Tuner for Xbox One
+
+This tuner is an `em28xx` bridge with a Silicon Labs `si2168` (revision B40)
+demodulator and an `si2157` tuner. It needs the `em28xx`, `em28xx_dvb`,
+`si2168` and `si2157` modules, plus the `dvb-demod-si2168-b40-01.fw` firmware,
+which is **not** part of `linux-firmware` - it is distributed by
+[Hauppauge][hauppauge-linux] and has to be placed in the host's
+`/lib/firmware/` by hand.
+
+Once `dmesg` shows the frontend registering and `/dev/dvb/adapter0` exists on
+the host, restart the add-on and it will pick the tuner up.
+
+
 ## Changelog & Releases
 
 This repository keeps a change log using [GitHub's releases][releases]
@@ -130,6 +169,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
+[haos-dvb]: https://github.com/home-assistant/operating-system/issues/3653
+[hauppauge-linux]: https://www.hauppauge.com/pages/support/support_linux.html
 [webgrabplus]: https://www.webgrabplus.com/
 [alpine-packages]: https://pkgs.alpinelinux.org/packages
 [forum]: https://community.home-assistant.io/
