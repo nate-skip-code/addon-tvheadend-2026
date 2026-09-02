@@ -6,4 +6,7 @@
 # ==============================================================================
 mkdir -p /etc/crontabs
 
-exec fdmove -c 2 1 /usr/sbin/crond -f -L /dev/stdout -l 0 -c /etc/crontabs
+# busybox crond counts down for verbosity: -l 0 is its debug level and
+# dumps the parsed crontab bitfields every wakeup. 8 is the default and
+# still logs the jobs it runs.
+exec fdmove -c 2 1 /usr/sbin/crond -f -L /dev/stdout -l 8 -c /etc/crontabs
