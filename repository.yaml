@@ -1,0 +1,5 @@
+---
+# https://developers.home-assistant.io/docs/add-ons/repository#repository-configuration
+name: Nate's Home Assistant Add-ons
+url: "https://github.com/nate-skip-code/addon-tvheadend-2026"
+maintainer: nate-skip-code <nate-skip-code@users.noreply.github.com>
