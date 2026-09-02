@@ -11,9 +11,53 @@ arch:
   - amd64
 webui: "http://[HOST]:[PORT:9981]/"
 udev: true
+# Listing /dev/dvb alone only bind-mounts the directory: the nodes show up
+# but the container is not permitted to open them, and TVHeadend answers
+# that by listing no adapters at all. Each character device has to be named
+# for the Supervisor to grant access to it. Entries for adapters that do not
+# exist are ignored.
 devices:
   - /dev/dvb
+  - /dev/dvb/adapter0/demux0
+  - /dev/dvb/adapter0/dvr0
+  - /dev/dvb/adapter0/frontend0
+  - /dev/dvb/adapter0/net0
+  - /dev/dvb/adapter1/demux0
+  - /dev/dvb/adapter1/dvr0
+  - /dev/dvb/adapter1/frontend0
+  - /dev/dvb/adapter1/net0
+  - /dev/dvb/adapter2/demux0
+  - /dev/dvb/adapter2/dvr0
+  - /dev/dvb/adapter2/frontend0
+  - /dev/dvb/adapter2/net0
+  - /dev/dvb/adapter3/demux0
+  - /dev/dvb/adapter3/dvr0
+  - /dev/dvb/adapter3/frontend0
+  - /dev/dvb/adapter3/net0
+  - /dev/dvb/adapter4/demux0
+  - /dev/dvb/adapter4/dvr0
+  - /dev/dvb/adapter4/frontend0
+  - /dev/dvb/adapter4/net0
+  - /dev/dvb/adapter5/demux0
+  - /dev/dvb/adapter5/dvr0
+  - /dev/dvb/adapter5/frontend0
+  - /dev/dvb/adapter5/net0
+  - /dev/dvb/adapter6/demux0
+  - /dev/dvb/adapter6/dvr0
+  - /dev/dvb/adapter6/frontend0
+  - /dev/dvb/adapter6/net0
+  - /dev/dvb/adapter7/demux0
+  - /dev/dvb/adapter7/dvr0
+  - /dev/dvb/adapter7/frontend0
+  - /dev/dvb/adapter7/net0
+  - /dev/dvb/adapter8/demux0
+  - /dev/dvb/adapter8/dvr0
+  - /dev/dvb/adapter8/frontend0
+  - /dev/dvb/adapter8/net0
   - /dev/dri
+  - /dev/dri/card0
+  - /dev/dri/card1
+  - /dev/dri/renderD128
 ports:
   9981/tcp: 9981
   9982/tcp: 9982
