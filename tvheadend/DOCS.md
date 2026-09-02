@@ -86,7 +86,14 @@ adapters it can see:
 ```txt
 Detected 1 DVB adapter(s):
   /dev/dvb/adapter0 (1 frontend(s))
+    /dev/dvb/adapter0/frontend0: opened OK
 ```
+
+`opened OK` means the add-on could actually open the tuner, which is what
+TVHeadend needs. If it instead logs `cannot open`, the device node is mapped
+into the container but the container is not permitted to use it - TVHeadend
+responds to that by listing no adapters at all, with an empty **TV adapters**
+tree and nothing in its own log.
 
 If it instead warns that there is no `/dev/dvb` or that no adapters were found,
 the problem is on the host, not in TVHeadend. **An add-on cannot load kernel
