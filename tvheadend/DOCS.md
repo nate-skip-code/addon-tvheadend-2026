@@ -90,10 +90,15 @@ Detected 1 DVB adapter(s):
 ```
 
 `opened OK` means the add-on could actually open the tuner, which is what
-TVHeadend needs. If it instead logs `cannot open`, the device node is mapped
-into the container but the container is not permitted to use it - TVHeadend
-responds to that by listing no adapters at all, with an empty **TV adapters**
-tree and nothing in its own log.
+TVHeadend needs. If it instead logs `cannot open (Operation not permitted)`,
+the device node is mapped into the container but the container is not
+permitted to use it - TVHeadend responds to that by listing no adapters at
+all, with an empty **TV adapters** tree and nothing in its own log.
+
+That happens when a device is mapped by directory rather than by node. The
+add-on's `devices` list therefore names every `/dev/dvb/adapterN/*` node
+individually, for adapters 0 through 8; if you somehow have more than nine
+tuners, extend that list in `config.yaml`.
 
 If it instead warns that there is no `/dev/dvb` or that no adapters were found,
 the problem is on the host, not in TVHeadend. **An add-on cannot load kernel
