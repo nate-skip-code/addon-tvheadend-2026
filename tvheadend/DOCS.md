@@ -112,9 +112,47 @@ Check the host's kernel log (`dmesg`) for the tuner. A line such as
 `Direct firmware load for dvb-demod-si2168-b40-01.fw failed with error -2`
 means the driver bound but the firmware is missing.
 
-Note that Home Assistant OS does not ship DVB tuner drivers or firmware, and
-[declined to add them][haos-dvb]. Tuners generally work on Home Assistant
-Supervised installs, where the underlying distribution provides both.
+Home Assistant OS does ship drivers and firmware for many common tuners - a
+Hauppauge Xbox One stick (em28xx + si2168) is detected out of the box on HAOS
+18.2 / generic-x86-64, for instance. Coverage is not exhaustive, though, and
+requests to broaden it have [been declined][haos-dvb]. If `dmesg` shows the
+driver never binding, a Home Assistant Supervised install on a general-purpose
+distribution is the fallback.
+
+### The tuner works but no channels are found
+
+If the add-on logs `opened OK`, TVHeadend lists the adapter, and scans run and
+tune each frequency, but every mux comes back `FAIL` with zero services, the
+problem is the radio path rather than anything in software. In rough order of
+how often each is the culprit:
+
+1. **USB 3.0 interference.** USB 3.0 ports and cables emit broadband noise
+   across the UHF television band, and a tuner stick plugged straight into
+   one can be completely desensitized while looking perfectly healthy. Move
+   the tuner to a USB 2.0 port, and preferably use an extension cable to get
+   it away from the machine - the whole computer is a noise source. This is
+   the single most common cause of "everything is configured right and I
+   still get nothing".
+2. **Unpowered amplifier.** An amplified antenna whose power injector is not
+   connected usually attenuates rather than passes signal, giving total
+   silence instead of weak reception.
+3. **Amplifier overload.** Close to high-power transmitters, an amplifier can
+   drive the tuner's front end into compression. An overloaded tuner locks
+   onto nothing, which looks identical to no signal. Try without the amp.
+4. **Antenna, cabling or aim.** Check what you should be able to receive at
+   your address, and on which RF channels, before assuming reception is
+   possible at all.
+
+To tell whether any signal is arriving, open **Status -> Stream** while a scan
+is running. The number that matters is **Bandwidth**: a locked ATSC mux carries
+roughly 19,000 kb/s. Zero means no lock. Treat the signal-strength and SNR
+columns with suspicion - many drivers report a plausible-looking value derived
+from AGC even when only noise is present.
+
+A useful way to split the problem in half: connect the same antenna to a
+television with a built-in tuner and run its channel scan. If the television
+finds nothing either, the antenna or location is at fault; if it finds
+channels, the tuner, its USB port or its cabling is.
 
 ### Hauppauge Digital TV Tuner for Xbox One
 
